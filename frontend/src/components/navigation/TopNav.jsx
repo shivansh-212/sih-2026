@@ -20,7 +20,11 @@ import {
   Hash
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { searchWorldwide, generateLocationCadastralProfile } from '../../services/geocodingService';
+import { 
+  searchWorldwide, 
+  generateLocationCadastralProfile, 
+  getUserRealLocation 
+} from '../../services/geocodingService';
 
 export function TopNav({
   properties = [],
@@ -129,57 +133,19 @@ export function TopNav({
     }
   };
 
-  const handleMyLocation = () => {
+  const handleMyLocation = async () => {
     setIsDropdownOpen(false);
-    if (!navigator.geolocation) {
-      setSearchQuery('Sector GPS');
+    setSearchQuery('Detecting Real Location...');
+    try {
+      const realProfile = await getUserRealLocation();
+      setSearchQuery(realProfile.name || realProfile.village);
       if (onNavigateToLocation) {
-        onNavigateToLocation(generateLocationCadastralProfile({
-          lat: 25.4358,
-          lng: 81.8463,
-          name: 'Sector GPS (Prayagraj)',
-          pincode: '212306',
-          state: 'Uttar Pradesh',
-          country: 'India',
-          flag: '📍',
-        }));
+        onNavigateToLocation(realProfile);
       }
-      return;
+    } catch (err) {
+      console.warn('Location detection notice:', err);
+      setSearchQuery('My Location');
     }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        setSearchQuery('My Location (GPS)');
-        if (onNavigateToLocation) {
-          const pin = `${Math.abs(Math.floor(latitude * 100)) % 900000 + 100000}`;
-          onNavigateToLocation(generateLocationCadastralProfile({
-            lat: latitude,
-            lng: longitude,
-            name: 'My GPS Location',
-            pincode: pin,
-            village: 'CurrentSector',
-            flag: '📍',
-          }));
-        }
-      },
-      (err) => {
-        console.warn('TopNav geolocation notice:', err);
-        setSearchQuery('Sector GPS');
-        if (onNavigateToLocation) {
-          onNavigateToLocation(generateLocationCadastralProfile({
-            lat: 25.4358,
-            lng: 81.8463,
-            name: 'Sector GPS (Prayagraj)',
-            pincode: '212306',
-            state: 'Uttar Pradesh',
-            country: 'India',
-            flag: '📍',
-          }));
-        }
-      },
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
   };
 
   return (

@@ -695,3 +695,147 @@ export async function searchWorldwide(query, signal) {
 
   return results.slice(0, 10);
 }
+
+/**
+ * Detect the user's TRUE current location:
+ * 1. High-accuracy Browser GPS (navigator.geolocation)
+ * 2. Fast IP Geolocation fallback if GPS is denied or unavailable on desktop
+ * 3. Live Reverse-geocoding to get real village, locality, block, district, state, and pincode!
+ * 4. Generate dynamic Cadastral Profile with real LGD code & pincode!
+ */
+export async function getUserRealLocation() {
+  let coords = null;
+
+  // Step 1: Query high-accuracy HTML5 browser GPS
+  if (typeof navigator !== 'undefined' && navigator.geolocation) {
+    try {
+      const pos = await new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(resolve, reject, {
+          enableHighAccuracy: true,
+          timeout: 6000,
+          maximumAge: 0,
+        });
+      });
+      if (pos && pos.coords) {
+        coords = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          source: 'GPS',
+        };
+      }
+    } catch (gpsErr) {
+      console.warn('[GeocodingService] Browser GPS notice (falling back to IP location):', gpsErr);
+    }
+  }
+
+  // Step 2: If GPS failed or denied, query fast IP geolocation
+  if (!coords) {
+    try {
+      const ipRes = await fetch('https://ipapi.co/json/');
+      if (ipRes.ok) {
+        const ipData = await ipRes.json();
+        if (ipData && ipData.latitude && ipData.longitude) {
+          coords = {
+            lat: parseFloat(ipData.latitude),
+            lng: parseFloat(ipData.longitude),
+            city: ipData.city,
+            pincode: ipData.postal,
+            region: ipData.region,
+            country: ipData.country_name,
+            source: 'IP',
+          };
+        }
+      }
+    } catch (ipErr) {
+      try {
+        const ip2 = await fetch('https://ipwho.is/');
+        if (ip2.ok) {
+          const d2 = await ip2.json();
+          if (d2 && d2.latitude && d2.longitude) {
+            coords = {
+              lat: parseFloat(d2.latitude),
+              lng: parseFloat(d2.longitude),
+              city: d2.city,
+              pincode: d2.postal,
+              region: d2.region,
+              country: d2.country,
+              source: 'IP',
+            };
+          }
+        }
+      } catch (_) {}
+    }
+  }
+
+  // Step 3: Offline fallback if network is completely down
+  if (!coords) {
+    const defLgd = reverseGeocodeLGD(25.4358, 81.8463);
+    return generateLocationCadastralProfile({
+      ...defLgd,
+      name: 'Prayagraj HQ',
+      flag: '📍',
+    });
+  }
+
+  const { lat, lng } = coords;
+
+  // Step 4: Live Reverse-Geocode coordinates to find real address & pincode
+  let realVillage = coords.city || '';
+  let realBlock = coords.city || '';
+  let realDistrict = coords.city || '';
+  let realState = coords.region || '';
+  let realPincode = coords.pincode || '';
+  let realCountry = coords.country || 'India';
+
+  try {
+    const revUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`;
+    const revRes = await fetch(revUrl, {
+      headers: {
+        'Accept-Language': 'en',
+        'User-Agent': 'BhuID-Live-Location/2.0',
+      },
+    });
+    if (revRes.ok) {
+      const revData = await revRes.json();
+      const addr = revData.address || {};
+      realVillage =
+        addr.village ||
+        addr.suburb ||
+        addr.neighbourhood ||
+        addr.residential ||
+        addr.town ||
+        addr.city ||
+        realVillage;
+      realBlock = addr.county || addr.state_district || addr.suburb || realBlock;
+      realDistrict = addr.state_district || addr.county || addr.city || realDistrict;
+      realState = addr.state || realState;
+      realPincode = addr.postcode || realPincode;
+      realCountry = addr.country || realCountry;
+    }
+  } catch (err) {
+    console.warn('[GeocodingService] Reverse geocode lookup notice:', err);
+  }
+
+  // Cross-reference with nearest LGD village for official code
+  const nearestLgd = reverseGeocodeLGD(lat, lng);
+  const finalVillage = realVillage || nearestLgd.village || 'Local Sector';
+  const finalPincode = String(realPincode || nearestLgd.pincode || '212306').trim();
+  const finalVCode = nearestLgd.village_code || generateVillageCode(finalVillage, finalPincode);
+
+  return generateLocationCadastralProfile({
+    name: finalVillage,
+    subtext: `${realBlock || nearestLgd.block || 'Sadar'}, ${realDistrict || nearestLgd.district || 'District'} • Live Location`,
+    village: finalVillage,
+    village_code: finalVCode,
+    lgd_code: nearestLgd.lgd_code || finalVCode,
+    pincode: finalPincode,
+    block: realBlock || nearestLgd.block || 'Sadar',
+    district: realDistrict || nearestLgd.district || 'District',
+    state: realState || nearestLgd.state || 'Uttar Pradesh',
+    country: realCountry,
+    lat,
+    lng,
+    flag: '📍',
+    isLiveGPS: true,
+  });
+}

@@ -65,7 +65,7 @@ const BASE_LAYERS = {
   },
 };
 
-import { reverseGeocodeLGD, generateLocationCadastralProfile } from '../../services/geocodingService';
+import { reverseGeocodeLGD, generateLocationCadastralProfile, getUserRealLocation } from '../../services/geocodingService';
 
 export function MapView({
   properties = [],
@@ -318,70 +318,56 @@ export function MapView({
   }, [cropBounds, currentBaseMap, onCropAreaScan]);
 
   // ═══════════════════════════════════════════════════════
-  // MY LOCATION — GPS geolocation
+  // MY LOCATION — GPS / Real Geographic Geolocation
   // ═══════════════════════════════════════════════════════
-  const handleMyLocation = useCallback(() => {
+  const handleMyLocation = useCallback(async () => {
     if (!mapInstanceRef.current) return;
     setIsLocating(true);
 
-    const applyLocation = (lat, lng, label = 'My Location') => {
+    try {
+      const realProfile = await getUserRealLocation();
+      const { lat, lng, name, village, pincode } = realProfile;
       const map = mapInstanceRef.current;
-      if (!map) return;
 
-      map.flyTo([lat, lng], 18, { duration: 1.5 });
+      if (map) {
+        map.flyTo([lat, lng], 18, { duration: 1.5 });
 
-      if (myLocationMarkerRef.current) {
-        map.removeLayer(myLocationMarkerRef.current);
+        if (myLocationMarkerRef.current) {
+          map.removeLayer(myLocationMarkerRef.current);
+        }
+
+        const locIcon = L.divIcon({
+          className: 'my-location-marker',
+          html: `<div style="
+            width: 22px; height: 22px;
+            background: #1a73e8;
+            border: 3px solid #ffffff;
+            border-radius: 50%;
+            box-shadow: 0 0 0 6px rgba(26,115,232,0.25), 0 3px 8px rgba(0,0,0,0.3);
+            animation: locationPulse 2s ease-in-out infinite;
+          "></div>`,
+          iconSize: [22, 22],
+          iconAnchor: [11, 11],
+        });
+
+        myLocationMarkerRef.current = L.marker([lat, lng], { icon: locIcon })
+          .addTo(map)
+          .bindTooltip(
+            `<div style="font-weight:700;font-size:11px">📍 ${name || village}</div>
+             <div style="font-size:10px;color:#5f6368">${lat.toFixed(6)}, ${lng.toFixed(6)} • PIN ${pincode}</div>`,
+            { direction: 'top', offset: [0, -14] }
+          );
+
+        if (onNavigateToLocation) {
+          onNavigateToLocation(realProfile);
+        }
       }
-
-      const locIcon = L.divIcon({
-        className: 'my-location-marker',
-        html: `<div style="
-          width: 22px; height: 22px;
-          background: #1a73e8;
-          border: 3px solid #ffffff;
-          border-radius: 50%;
-          box-shadow: 0 0 0 6px rgba(26,115,232,0.25), 0 3px 8px rgba(0,0,0,0.3);
-          animation: locationPulse 2s ease-in-out infinite;
-        "></div>`,
-        iconSize: [22, 22],
-        iconAnchor: [11, 11],
-      });
-
-      myLocationMarkerRef.current = L.marker([lat, lng], { icon: locIcon })
-        .addTo(map)
-        .bindTooltip(
-          `<div style="font-weight:700;font-size:11px">📍 ${label}</div>
-           <div style="font-size:10px;color:#5f6368">${lat.toFixed(6)}, ${lng.toFixed(6)}</div>`,
-          { direction: 'top', offset: [0, -14] }
-        );
-
-      if (onNavigateToLocation) {
-        onNavigateToLocation({ lat, lng, name: label });
-      }
-
+    } catch (err) {
+      console.warn('[MapView] Real location detection notice:', err);
+    } finally {
       setIsLocating(false);
-    };
-
-    if (!navigator.geolocation) {
-      applyLocation(selectedProperty?.latitude || 25.4358, selectedProperty?.longitude || 81.8463, 'Current Sector GPS');
-      return;
     }
-
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { latitude, longitude } = position.coords;
-        applyLocation(latitude, longitude, 'My Location (Live GPS)');
-      },
-      (error) => {
-        console.warn('Geolocation notice (falling back to current active sector):', error);
-        const lat = selectedProperty?.latitude || 25.4358;
-        const lng = selectedProperty?.longitude || 81.8463;
-        applyLocation(lat, lng, 'Sector GPS Location');
-      },
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
-  }, [onNavigateToLocation, selectedProperty]);
+  }, [onNavigateToLocation]);
 
   // ═══════════════════════════════════════════════════════
   // Navigate to a specific location (called from parent)
