@@ -33,9 +33,18 @@ if settings.DATABASE_URL.startswith("sqlite"):
     _ga2_sqlite.after_drop = lambda *a, **kw: None
 
 
+def _normalize_db_url(url: str) -> str:
+    """Ensure PostgreSQL URLs use the psycopg (v3) dialect for SQLAlchemy 2.0."""
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql+psycopg://", 1)
+    if url.startswith("postgresql://") and not url.startswith("postgresql+"):
+        return url.replace("postgresql://", "postgresql+psycopg://", 1)
+    return url
+
+
 def _create_engine():
     """Create the SQLAlchemy engine with appropriate settings."""
-    url = settings.DATABASE_URL
+    url = _normalize_db_url(settings.DATABASE_URL)
 
     if url.startswith("sqlite"):
         eng = create_engine(
