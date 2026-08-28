@@ -502,6 +502,7 @@ export const api = {
           radius_meters: params.radius_meters || 80.0,
           zoom_level: 19,
           bounds: params.bounds || null,
+          layer_type: params.layer_type || "google_sat",
         })
       });
       if (res && res.success && Array.isArray(res.buildings)) return res;

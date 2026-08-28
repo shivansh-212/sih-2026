@@ -244,6 +244,7 @@ function MainApp() {
         village_code: activeLocation.village_code || 'LAK042',
         radius_meters: 120.0,
         existing_properties: properties,
+        layer_type: cropBounds.layer_type || 'google_sat',
         bounds: {
           north: cropBounds.north,
           south: cropBounds.south,

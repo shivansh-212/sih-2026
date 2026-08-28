@@ -150,6 +150,7 @@ class AIHouseDetectRequest(BaseModel):
     radius_meters: float = 80.0
     zoom_level: int = 19
     bounds: dict[str, float] | None = None
+    layer_type: str | None = "google_sat"
 
 
 class DetectedBuildingItem(BaseModel):

@@ -183,9 +183,6 @@ export function MapView({
   // AI scanning auto-zoom
   useEffect(() => {
     if (isScanning || (Array.isArray(detectedBuildings) && detectedBuildings.length > 0)) {
-      if (currentBaseMap !== 'google_sat' && currentBaseMap !== 'satellite') {
-        setCurrentBaseMap('google_sat');
-      }
       if (mapInstanceRef.current) {
         const centerLat = selectedProperty?.latitude || (detectedBuildings[0]?.latitude) || 25.4358;
         const centerLng = selectedProperty?.longitude || (detectedBuildings[0]?.longitude) || 81.8463;
@@ -206,11 +203,6 @@ export function MapView({
     if (cropRectRef.current) {
       mapInstanceRef.current.removeLayer(cropRectRef.current);
       cropRectRef.current = null;
-    }
-
-    // Switch to satellite for visual context
-    if (currentBaseMap !== 'google_sat' && currentBaseMap !== 'satellite') {
-      setCurrentBaseMap('google_sat');
     }
 
     const map = mapInstanceRef.current;
@@ -287,6 +279,7 @@ export function MapView({
         west: bounds.getWest(),
         center_lat: bounds.getCenter().lat,
         center_lng: bounds.getCenter().lng,
+        layer_type: currentBaseMap,
       };
       setCropBounds(cropData);
       setIsCropMode(false);
@@ -311,7 +304,10 @@ export function MapView({
 
   const confirmCropScan = useCallback(() => {
     if (cropBounds && onCropAreaScan) {
-      onCropAreaScan(cropBounds);
+      onCropAreaScan({
+        ...cropBounds,
+        layer_type: currentBaseMap,
+      });
     }
     // Clear the crop rectangle after scan
     if (cropRectRef.current && mapInstanceRef.current) {
@@ -319,7 +315,7 @@ export function MapView({
       cropRectRef.current = null;
     }
     setCropBounds(null);
-  }, [cropBounds, onCropAreaScan]);
+  }, [cropBounds, currentBaseMap, onCropAreaScan]);
 
   // ═══════════════════════════════════════════════════════
   // MY LOCATION — GPS geolocation

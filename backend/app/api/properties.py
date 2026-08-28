@@ -466,6 +466,7 @@ def ai_detect_houses(
         radius_meters=request.radius_meters,
         zoom_level=request.zoom_level,
         bounds=request.bounds,
+        layer_type=request.layer_type,
         db=db,
     )
     return result
