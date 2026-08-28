@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: bhu_id_postgres
+    environment:
+      POSTGRES_DB: bhu_id
+      POSTGRES_USER: bhu_id
+      POSTGRES_PASSWORD: bhu_id
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bhu_id -d bhu_id"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+volumes:
+  pgdata:
