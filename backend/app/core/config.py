@@ -25,6 +25,11 @@ class Settings(BaseSettings):
     GEMINI_MODEL: str = "gemini-2.5-flash"
 
 
+    # Supabase Configuration
+    SUPABASE_URL: str = ""
+    SUPABASE_KEY: str = ""
+    SUPABASE_PROJECT_REF: str = ""
+
     # Seed credentials (development only — never commit real passwords)
     ADMIN_EMAIL: str = "admin@bhu-id.local"
     ADMIN_PASSWORD: str = "admin123"
@@ -40,6 +45,7 @@ class Settings(BaseSettings):
         "env_file": ".env",
         "env_file_encoding": "utf-8",
         "case_sensitive": True,
+        "extra": "ignore",
     }
 
 

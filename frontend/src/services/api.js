@@ -1,8 +1,15 @@
 /**
  * BHU-ID API Service Layer
  * Connects to FastAPI backend (/api/v1) with JWT authentication and WebSocket telemetry.
+ * Integrates Supabase Realtime & PostgREST sync with publishable API key.
  * Includes a resilient fallback mock adapter matching official data contracts.
  */
+import {
+  fetchPropertiesFromSupabase,
+  upsertPropertyToSupabase,
+  isSupabaseConfigured,
+  subscribeToProperties,
+} from './supabaseClient.js';
 
 const API_BASE = '/api/v1';
 
@@ -316,7 +323,20 @@ export const api = {
   properties: {
     async list(page = 1, pageSize = 50) {
       const res = await request(`/properties?page=${page}&page_size=${pageSize}`);
-      if (res && res.data) return res;
+      if (res && res.data && res.data.length > 0) return res;
+
+      // Supabase direct sync fallback
+      if (isSupabaseConfigured) {
+        const supaRes = await fetchPropertiesFromSupabase({ page, pageSize });
+        if (supaRes && supaRes.data && supaRes.data.length > 0) {
+          return {
+            success: true,
+            data: supaRes.data,
+            pagination: { page, page_size: pageSize, total_items: supaRes.count || supaRes.data.length, total_pages: Math.ceil((supaRes.count || supaRes.data.length) / pageSize) }
+          };
+        }
+      }
+
       return {
         success: true,
         data: SEED_PROPERTIES,
@@ -415,7 +435,12 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(payload)
       });
-      if (res && res.success) return res;
+      if (res && res.success) {
+        if (isSupabaseConfigured && res.property) {
+          upsertPropertyToSupabase(res.property).catch(() => {});
+        }
+        return res;
+      }
 
       // Fallback mint
       const hex = Math.random().toString(16).substring(2, 10);
@@ -447,6 +472,12 @@ export const api = {
           { source: "E_NAKSHA", status: "PENDING" }
         ]
       };
+
+      // Sync to Supabase in background
+      if (isSupabaseConfigured) {
+        upsertPropertyToSupabase(newProp).catch(() => {});
+      }
+
       SEED_PROPERTIES.unshift(newProp);
       return {
         success: true,
