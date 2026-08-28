@@ -185,33 +185,35 @@ function MainApp() {
     name: 'Lakshmipur',
   });
 
-  // Automatically detect user's REAL physical location on app startup
-  useEffect(() => {
-    let isMounted = true;
-    getUserRealLocation()
-      .then((realLoc) => {
-        if (!isMounted || !realLoc) return;
-        setActiveLocation({
-          pincode: realLoc.pincode,
-          village: realLoc.village || realLoc.name,
-          village_code: realLoc.village_code,
-          lgd_code: realLoc.lgd_code || realLoc.village_code,
-          lat: realLoc.lat,
-          lng: realLoc.lng,
-          name: realLoc.name,
-          block: realLoc.block,
-          district: realLoc.district,
-          state: realLoc.state,
-        });
-        if (window.__bhuMapNavigateTo && realLoc.lat && realLoc.lng) {
-          window.__bhuMapNavigateTo(realLoc.lat, realLoc.lng, 17);
-        }
-      })
-      .catch((err) => console.warn('[App] Real location startup notice:', err));
+  // Silent passive location update when panning the map (NO toast, NO map movement loop)
+  const handlePassiveLocationChange = useCallback((location) => {
+    if (!location) return;
+    const nextPin = String(location.pincode || '212306').trim();
+    const nextVillage = String(location.village || location.name || 'Sector').trim();
+    const nextVCode = String(location.village_code || 'VIL001').trim().toUpperCase();
 
-    return () => {
-      isMounted = false;
-    };
+    setActiveLocation((prev) => {
+      if (
+        prev.pincode === nextPin &&
+        prev.village_code === nextVCode &&
+        prev.village === nextVillage
+      ) {
+        return prev;
+      }
+      return {
+        ...prev,
+        pincode: nextPin,
+        village: nextVillage,
+        village_code: nextVCode,
+        lgd_code: location.lgd_code || nextVCode,
+        lat: location.lat || prev.lat,
+        lng: location.lng || prev.lng,
+        name: location.name || nextVillage,
+        block: location.block || prev.block,
+        district: location.district || prev.district,
+        state: location.state || prev.state,
+      };
+    });
   }, []);
 
   // Trigger AI House Scanning
@@ -390,7 +392,7 @@ function MainApp() {
         theme={theme}
         onCropAreaScan={handleCropAreaScan}
         onNavigateToLocation={handleNavigateToLocation}
-        onLocationChange={handleNavigateToLocation}
+        onLocationChange={handlePassiveLocationChange}
         activeLocation={activeLocation}
         isDrawerOpen={Boolean(selectedProperty || isHouseCountOpen)}
       />

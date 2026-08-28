@@ -1,14 +1,14 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import L from 'leaflet';
-import { 
-  Layers, 
-  Plus, 
-  Minus, 
-  Maximize2, 
-  Satellite, 
-  Map as MapIcon, 
-  Check, 
-  Globe, 
+import {
+  Layers,
+  Plus,
+  Minus,
+  Maximize2,
+  Satellite,
+  Map as MapIcon,
+  Check,
+  Globe,
   Scan,
   Crosshair,
   Navigation,
@@ -108,7 +108,7 @@ export function MapView({
   }, [theme]);
 
   const createBaseLayer = (layerKey) => {
-    const config = BASE_LAYERS[layerKey] || BASE_LAYERS.google_sat || BASE_LAYERS.satellite;
+    const config = BASE_LAYERS[layerKey] || BASE_LAYERS.osm || BASE_LAYERS.satellite;
     return L.tileLayer(config.url, {
       maxZoom: 22,
       maxNativeZoom: 18,
@@ -264,7 +264,7 @@ export function MapView({
 
       // Clean up temp and listeners
       if (tempRect) {
-        try { map.removeLayer(tempRect); } catch (_) {}
+        try { map.removeLayer(tempRect); } catch (_) { }
         tempRect = null;
       }
       map.off('mousedown', onMouseDown);
