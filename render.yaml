@@ -1,0 +1,32 @@
+﻿services:
+  - type: web
+    name: bhu-id-platform
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        value: https://dceqsuwdxfmitfjhkrsj.supabase.co
+      - key: SUPABASE_KEY
+        value: sb_publishable_ODsBQPTgYIQBJ4P_dIp2CA_VUYJsod8
+      - key: SUPABASE_PROJECT_REF
+        value: dceqsuwdxfmitfjhkrsj
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: JWT_ALGORITHM
+        value: HS256
+      - key: ACCESS_TOKEN_EXPIRE_MINUTES
+        value: "60"
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: ADMIN_EMAIL
+        value: admin@bhu-id.local
+      - key: ADMIN_PASSWORD
+        value: admin123
