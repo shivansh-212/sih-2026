@@ -65,6 +65,8 @@ const BASE_LAYERS = {
   },
 };
 
+import { reverseGeocodeLGD, generateLocationCadastralProfile } from '../../services/geocodingService';
+
 export function MapView({
   properties = [],
   selectedProperty,
@@ -79,6 +81,8 @@ export function MapView({
   theme = 'light',
   onCropAreaScan,
   onNavigateToLocation,
+  onLocationChange,
+  activeLocation,
   isDrawerOpen = false,
 }) {
   const mapContainerRef = useRef(null);
@@ -116,8 +120,8 @@ export function MapView({
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
 
-    const initialLat = selectedProperty?.latitude || 25.4358;
-    const initialLng = selectedProperty?.longitude || 81.8463;
+    const initialLat = activeLocation?.lat || selectedProperty?.latitude || 25.4358;
+    const initialLng = activeLocation?.lng || selectedProperty?.longitude || 81.8463;
 
     const map = L.map(mapContainerRef.current, {
       center: [initialLat, initialLng],
@@ -136,9 +140,25 @@ export function MapView({
 
     mapInstanceRef.current = map;
 
+    // Register global navigation helper
+    window.__bhuMapNavigateTo = (lat, lng, zoom) => {
+      map.flyTo([lat, lng], zoom || 17, { duration: 1.4 });
+    };
+
+    // Reverse geocode on map click to dynamically change village code & formula
+    map.on('click', (e) => {
+      if (cropRectRef.current) return;
+      const { lat, lng } = e.latlng;
+      const lgdProfile = reverseGeocodeLGD(lat, lng);
+      if (onLocationChange) {
+        onLocationChange(lgdProfile, true);
+      }
+    });
+
     setTimeout(() => map.invalidateSize(), 100);
 
     return () => {
+      delete window.__bhuMapNavigateTo;
       map.remove();
       mapInstanceRef.current = null;
     };
@@ -672,19 +692,22 @@ export function MapView({
         </div>
       )}
 
-      {/* ISRO Bhuvan Attribution */}
+      {/* Dynamic LGD Village & Cadastral Formula Banner */}
       <div className="isro-bhuvan-banner">
         <div className="isro-flag-emblem">🇮🇳</div>
         <div className="isro-banner-details">
           <div className="isro-title">
-            <span>ISRO Bhuvan GeoMap</span>
+            <span>{activeLocation?.village || 'Lakshmipur'}</span>
+            <span className="formula-live-pill" title="Dynamic Cadastral Scheme for Active Sector">
+              {activeLocation?.pincode || '212306'}-{activeLocation?.village_code || 'LAK042'}-H{'{NO}'}
+            </span>
             <span className="isro-status-tag">
               <span className="bhuvan-live-dot"></span>
-              NRSC Bhuvan Active
+              LGD: {activeLocation?.lgd_code || activeLocation?.village_code || '162842'}
             </span>
           </div>
           <div className="isro-subtitle">
-            National Remote Sensing Centre (NRSC) • Indian Space Research Organisation (ISRO)
+            {activeLocation?.block || 'Koraon'}, {activeLocation?.district || 'Prayagraj'}, {activeLocation?.state || 'UP'} • PIN {activeLocation?.pincode || '212306'}
           </div>
         </div>
       </div>

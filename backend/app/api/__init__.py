@@ -12,6 +12,7 @@ from app.api.datasets import router as datasets_router
 from app.api.matching import router as matching_router
 from app.api.admin import router as admin_router
 from app.api.websocket import router as ws_router
+from app.api.lgd import router as lgd_router
 
 api_router = APIRouter(prefix="/api/v1")
 
@@ -22,4 +23,5 @@ api_router.include_router(datasets_router)
 api_router.include_router(matching_router)
 api_router.include_router(admin_router)
 api_router.include_router(ws_router)
+api_router.include_router(lgd_router)
 

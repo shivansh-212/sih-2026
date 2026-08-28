@@ -1383,6 +1383,21 @@ a {
   border: 1px solid rgba(24, 128, 56, 0.2);
 }
 
+.formula-live-pill {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace;
+  font-size: 10.5px;
+  font-weight: 700;
+  color: #1a73e8;
+  background: rgba(26, 115, 232, 0.12);
+  border: 1px solid rgba(26, 115, 232, 0.3);
+  padding: 1px 8px;
+  border-radius: var(--radius-full);
+  letter-spacing: 0.3px;
+  box-shadow: 0 1px 3px rgba(26, 115, 232, 0.15);
+}
+
 .bhuvan-live-dot {
   width: 6px;
   height: 6px;

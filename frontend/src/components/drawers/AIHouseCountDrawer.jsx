@@ -35,6 +35,13 @@ export function AIHouseCountDrawer({
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [filterQuery, setFilterQuery] = useState('');
 
+  // Sync external location changes (from search or map click) into drawer inputs
+  useEffect(() => {
+    if (initialPincode) setPincode(initialPincode);
+    if (initialVillage) setVillage(initialVillage);
+    if (initialVillageCode) setVillageCode(initialVillageCode);
+  }, [initialPincode, initialVillage, initialVillageCode]);
+
   // Sync selected buildings (default all selected when new scan completes)
   useEffect(() => {
     if (Array.isArray(buildings) && buildings.length > 0) {

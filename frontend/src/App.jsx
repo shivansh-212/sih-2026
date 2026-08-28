@@ -359,6 +359,8 @@ function MainApp() {
         theme={theme}
         onCropAreaScan={handleCropAreaScan}
         onNavigateToLocation={handleNavigateToLocation}
+        onLocationChange={handleNavigateToLocation}
+        activeLocation={activeLocation}
         isDrawerOpen={Boolean(selectedProperty || isHouseCountOpen)}
       />
 
