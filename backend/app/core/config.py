@@ -47,7 +47,7 @@ class Settings(BaseSettings):
         return origins
 
     model_config = {
-        "env_file": ".env",
+        "env_file": [".env", "backend/.env", "sih/.env"],
         "env_file_encoding": "utf-8",
         "case_sensitive": True,
         "extra": "ignore",
