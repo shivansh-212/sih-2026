@@ -16,32 +16,32 @@ import {
   X
 } from 'lucide-react';
 
-// Tile configurations
+// Tile configurations with maxNativeZoom to prevent "Map data not yet available" tile errors
 const BASE_LAYERS = {
-  satellite: {
-    id: 'satellite',
-    name: 'ISRO Bhuvan / Optical Satellite',
-    subname: 'High-Resolution Satellite Imagery (~10m Scale)',
-    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-    options: { maxZoom: 19, attribution: '© ISRO Bhuvan / NRSC / Esri Satellite' },
-    badge: 'Satellite',
-    isGov: true,
-  },
   google_sat: {
     id: 'google_sat',
     name: 'Google Satellite & Cadastral Hybrid',
     subname: 'High-Res Optical with Road & Parcel Labels',
     url: 'https://mt1.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
-    options: { maxZoom: 20, attribution: '© Google Satellite / Hybrid' },
+    options: { maxZoom: 22, maxNativeZoom: 20, attribution: '© Google Satellite / Hybrid' },
     badge: 'Hybrid Sat',
     isGov: false,
+  },
+  satellite: {
+    id: 'satellite',
+    name: 'ISRO Bhuvan / Optical Satellite',
+    subname: 'High-Resolution Satellite Imagery (~10m Scale)',
+    url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    options: { maxZoom: 22, maxNativeZoom: 17, attribution: '© ISRO Bhuvan / NRSC / Esri Satellite' },
+    badge: 'Satellite',
+    isGov: true,
   },
   street: {
     id: 'street',
     name: 'Street Map (Light)',
     subname: 'Clean Vector Base for Land Parcels',
     url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
-    options: { maxZoom: 19, subdomains: 'abcd', attribution: '© Carto / OpenStreetMap' },
+    options: { maxZoom: 22, maxNativeZoom: 19, subdomains: 'abcd', attribution: '© Carto / OpenStreetMap' },
     badge: 'Street',
     isGov: false,
   },
@@ -50,7 +50,7 @@ const BASE_LAYERS = {
     name: 'OpenStreetMap India',
     subname: 'Standard Geographic Cartography',
     url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-    options: { maxZoom: 19, attribution: '© OpenStreetMap Contributors' },
+    options: { maxZoom: 22, maxNativeZoom: 19, attribution: '© OpenStreetMap Contributors' },
     badge: 'OSM',
     isGov: false,
   },
@@ -59,7 +59,7 @@ const BASE_LAYERS = {
     name: 'Cadastral Dark',
     subname: 'High-contrast Night View',
     url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-    options: { maxZoom: 19, subdomains: 'abcd', attribution: '© Carto Dark' },
+    options: { maxZoom: 22, maxNativeZoom: 19, subdomains: 'abcd', attribution: '© Carto Dark' },
     badge: 'Dark',
     isGov: false,
   },
@@ -91,7 +91,7 @@ export function MapView({
   const cropRectRef = useRef(null);
   const myLocationMarkerRef = useRef(null);
 
-  const [currentBaseMap, setCurrentBaseMap] = useState('satellite');
+  const [currentBaseMap, setCurrentBaseMap] = useState('google_sat');
   const [isLayerMenuOpen, setIsLayerMenuOpen] = useState(false);
   const [isCropMode, setIsCropMode] = useState(false);
   const [cropBounds, setCropBounds] = useState(null);
@@ -104,8 +104,12 @@ export function MapView({
   }, [theme]);
 
   const createBaseLayer = (layerKey) => {
-    const config = BASE_LAYERS[layerKey] || BASE_LAYERS.satellite;
-    return L.tileLayer(config.url, config.options || { maxZoom: 19 });
+    const config = BASE_LAYERS[layerKey] || BASE_LAYERS.google_sat || BASE_LAYERS.satellite;
+    return L.tileLayer(config.url, {
+      maxZoom: 22,
+      maxNativeZoom: 18,
+      ...(config.options || {}),
+    });
   };
 
   // Initialize Leaflet Map
@@ -159,13 +163,13 @@ export function MapView({
   // AI scanning auto-zoom
   useEffect(() => {
     if (isScanning || (Array.isArray(detectedBuildings) && detectedBuildings.length > 0)) {
-      if (currentBaseMap !== 'satellite' && currentBaseMap !== 'google_sat') {
-        setCurrentBaseMap('satellite');
+      if (currentBaseMap !== 'google_sat' && currentBaseMap !== 'satellite') {
+        setCurrentBaseMap('google_sat');
       }
       if (mapInstanceRef.current) {
         const centerLat = selectedProperty?.latitude || (detectedBuildings[0]?.latitude) || 25.4358;
         const centerLng = selectedProperty?.longitude || (detectedBuildings[0]?.longitude) || 81.8463;
-        mapInstanceRef.current.flyTo([centerLat, centerLng], 19, { duration: 1.2 });
+        mapInstanceRef.current.flyTo([centerLat, centerLng], 18, { duration: 1.2 });
       }
     }
   }, [isScanning, detectedBuildings]);
@@ -185,8 +189,8 @@ export function MapView({
     }
 
     // Switch to satellite for visual context
-    if (currentBaseMap !== 'satellite' && currentBaseMap !== 'google_sat') {
-      setCurrentBaseMap('satellite');
+    if (currentBaseMap !== 'google_sat' && currentBaseMap !== 'satellite') {
+      setCurrentBaseMap('google_sat');
     }
 
     const map = mapInstanceRef.current;
