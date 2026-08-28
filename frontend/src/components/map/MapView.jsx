@@ -155,9 +155,26 @@ export function MapView({
       }
     });
 
+    // Continuously update active village, pincode, and formula on map pan/move
+    let moveTimer = null;
+    map.on('moveend', () => {
+      if (cropRectRef.current) return;
+      clearTimeout(moveTimer);
+      moveTimer = setTimeout(() => {
+        const center = map.getCenter();
+        if (center) {
+          const lgdProfile = reverseGeocodeLGD(center.lat, center.lng);
+          if (onLocationChange) {
+            onLocationChange(lgdProfile, false); // false = update HUD and formula without toast notification
+          }
+        }
+      }, 350);
+    });
+
     setTimeout(() => map.invalidateSize(), 100);
 
     return () => {
+      clearTimeout(moveTimer);
       delete window.__bhuMapNavigateTo;
       map.remove();
       mapInstanceRef.current = null;
