@@ -95,7 +95,7 @@ export function MapView({
   const cropRectRef = useRef(null);
   const myLocationMarkerRef = useRef(null);
 
-  const [currentBaseMap, setCurrentBaseMap] = useState('google_sat');
+  const [currentBaseMap, setCurrentBaseMap] = useState('osm');
   const [isLayerMenuOpen, setIsLayerMenuOpen] = useState(false);
   const [isCropMode, setIsCropMode] = useState(false);
   const [cropBounds, setCropBounds] = useState(null);
