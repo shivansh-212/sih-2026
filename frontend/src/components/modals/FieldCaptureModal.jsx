@@ -96,8 +96,11 @@ export function FieldCaptureModal({ onClose, onCaptured, currentCenter }) {
     setIsSubmitting(false);
 
     if (res && res.success) {
-      setSuccessResult(res.property);
-      if (onCaptured) onCaptured(res.property);
+      const prop = res.data || res.property || res;
+      if (prop && prop.property_id) {
+        setSuccessResult(prop);
+        if (onCaptured) onCaptured(prop);
+      }
     }
   };
 

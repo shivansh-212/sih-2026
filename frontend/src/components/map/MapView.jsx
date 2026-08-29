@@ -394,14 +394,30 @@ export function MapView({
     mapInstanceRef.current.flyTo([lat, lng], zoom, { duration: 1.5 });
   }, []);
 
-  // Expose navigateTo via ref-like pattern for parent
+  // Expose navigateTo and getMapState via window for parent access
   useEffect(() => {
-    if (onNavigateToLocation) {
-      // Store function on window for parent access (lightweight approach)
-      window.__bhuMapNavigateTo = navigateTo;
-    }
-    return () => { delete window.__bhuMapNavigateTo; };
-  }, [navigateTo, onNavigateToLocation]);
+    window.__bhuMapNavigateTo = navigateTo;
+    window.__bhuMapGetState = () => {
+      if (!mapInstanceRef.current) return null;
+      const b = mapInstanceRef.current.getBounds();
+      const c = mapInstanceRef.current.getCenter();
+      return {
+        bounds: {
+          north: b.getNorth(),
+          south: b.getSouth(),
+          east: b.getEast(),
+          west: b.getWest(),
+        },
+        center: { lat: c.lat, lng: c.lng },
+        zoom: mapInstanceRef.current.getZoom(),
+        layer_type: currentBaseMap,
+      };
+    };
+    return () => {
+      delete window.__bhuMapNavigateTo;
+      delete window.__bhuMapGetState;
+    };
+  }, [navigateTo, currentBaseMap]);
 
   // ═══════════════════════════════════════════════════════
   // Render Official Registered Parcels & Markers

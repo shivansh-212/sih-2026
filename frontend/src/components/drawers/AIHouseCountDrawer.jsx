@@ -269,8 +269,8 @@ export function AIHouseCountDrawer({
             ) : (
               <>
                 <Building2 size={32} color="#5f6368" />
-                <p>Ready to detect houses in satellite view.</p>
-                <span>Click &quot;Re-scan 1m Satellite Micro-Zone&quot; or use the Crop tool on the map.</span>
+                <p>No rooftop footprints detected in this area.</p>
+                <span>The scanned area is open plain land. Click &quot;Re-scan 1m Satellite Micro-Zone&quot; or use the Crop tool over built-up houses to detect roofs.</span>
               </>
             )}
           </div>

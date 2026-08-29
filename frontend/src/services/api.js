@@ -431,15 +431,24 @@ export const api = {
     },
 
     async capture(payload) {
-      const res = await request('/properties/capture', {
-        method: 'POST',
-        body: JSON.stringify(payload)
-      });
-      if (res && res.success) {
-        if (isSupabaseConfigured && res.property) {
-          upsertPropertyToSupabase(res.property).catch(() => {});
+      try {
+        const res = await request('/properties/capture', {
+          method: 'POST',
+          body: JSON.stringify(payload)
+        });
+        if (res && res.success) {
+          const propObj = res.data || res.property || res;
+          if (isSupabaseConfigured && propObj) {
+            upsertPropertyToSupabase(propObj).catch(() => {});
+          }
+          return {
+            ...res,
+            data: propObj,
+            property: propObj,
+          };
         }
-        return res;
+      } catch (err) {
+        console.warn('[API] Capture request notice:', err);
       }
 
       // Fallback mint
@@ -478,212 +487,58 @@ export const api = {
         upsertPropertyToSupabase(newProp).catch(() => {});
       }
 
-      SEED_PROPERTIES.unshift(newProp);
       return {
         success: true,
-        message: "Property successfully captured and persistent BHU-ID minted",
-        property: newProp
+        data: newProp,
+        property: newProp,
       };
     },
 
     // AI Satellite House Detection (~10m zoom scale)
     async detectHouses(params = {}) {
-      const res = await request('/properties/ai-detect-houses', {
-        method: 'POST',
-        body: JSON.stringify({
-          latitude: params.latitude || 25.4358,
-          longitude: params.longitude || 81.8463,
-          pincode: params.pincode || "212306",
-          village: params.village || "Lakshmipur",
-          village_code: params.village_code || "LAK042",
-          block: params.block || "Koraon",
-          district: params.district || "Prayagraj",
-          state: params.state || "Uttar Pradesh",
-          radius_meters: params.radius_meters || 80.0,
-          zoom_level: 19,
-          bounds: params.bounds || null,
-          layer_type: params.layer_type || "google_sat",
-        })
-      });
-      if (res && res.success && Array.isArray(res.buildings)) return res;
-
-      // Fallback local detection generator (1-Meter Precision)
-      const vCode = (params.village_code || "LAK042").toUpperCase();
-      const pin = String(params.pincode || "212306").trim();
-      const lat = Number(params.latitude) || 25.4358;
-      const lng = Number(params.longitude) || 81.8463;
-
-      let bldgs = [];
-
-      // Ellipsoidal calibrated meters per degree
-      const latRad = (lat * Math.PI) / 180.0;
-      const mLat = 111132.92 - 559.82 * Math.cos(2 * latRad);
-      const mLng = 111412.84 * Math.cos(latRad);
-
-      const roofProfiles = [
-        { roof: "Flat RCC Concrete", floors: 2, mat: "Brick Masonry", conf: 97.4, w: 14.0, h: 10.5 },
-        { roof: "Gable Tile / Clay", floors: 1, mat: "Brick / Timber", conf: 95.8, w: 11.5, h: 9.0 },
-        { roof: "Flat RCC Concrete", floors: 2, mat: "Reinforced Concrete", conf: 98.1, w: 15.0, h: 11.5 },
-        { roof: "Corrugated Metal / Tin", floors: 1, mat: "Light Frame", conf: 93.5, w: 10.0, h: 8.5 },
-        { roof: "Flat RCC Concrete", floors: 3, mat: "Commercial Concrete", conf: 96.9, w: 16.0, h: 12.0 },
-        { roof: "Gable Tile / Clay", floors: 1, mat: "Brick Masonry", conf: 94.6, w: 12.5, h: 9.5 },
-        { roof: "Flat RCC Concrete", floors: 2, mat: "Brick Masonry", conf: 96.2, w: 13.5, h: 10.0 },
-      ];
-
-      // Check existing properties to find next available sequence
-      const existingProps = params.existing_properties || [];
-      let maxExistingNum = 0;
-      const assignedNums = new Set();
-      existingProps.forEach((p) => {
-        const idStr = String(p.property_id || '');
-        const match = idStr.match(/H(\d+)/i);
-        if (match) {
-          const n = parseInt(match[1], 10);
-          assignedNums.add(n);
-          if (n > maxExistingNum) maxExistingNum = n;
-        }
-      });
-      let nextSeq = maxExistingNum + 1;
-
-      if (params.bounds && params.bounds.north && params.bounds.south) {
-        const { north, south, east, west } = params.bounds;
-        const nLat = Math.max(north, south);
-        const sLat = minLat(north, south);
-        const eLng = Math.max(east, west);
-        const wLng = minLng(east, west);
-        const latSpan = nLat - sLat;
-        const lngSpan = eLng - wLng;
-
-        function minLat(a, b) { return Math.min(a, b); }
-        function minLng(a, b) { return Math.min(a, b); }
-
-        // Organic settlement clusters avoiding empty roads and tree canopies
-        const clusterCenters = [
-          { x: 0.32, y: 0.35 },
-          { x: 0.68, y: 0.38 },
-          { x: 0.48, y: 0.72 },
-          { x: 0.78, y: 0.75 },
-          { x: 0.22, y: 0.70 },
-          { x: 0.52, y: 0.24 },
-        ];
-
-        const targetCount = Math.max(3, Math.min(Math.floor((lngSpan * mLng * latSpan * mLat) / 1000), 12));
-
-        for (let i = 0; i < targetCount; i++) {
-          while (assignedNums.has(nextSeq)) {
-            nextSeq++;
-          }
-          const houseInt = nextSeq;
-          assignedNums.add(houseInt);
-          nextSeq++;
-
-          const base = clusterCenters[i % clusterCenters.length];
-          const jitterX = ((i * 17) % 19 - 9) * 0.012;
-          const jitterY = ((i * 13) % 17 - 8) * 0.010;
-
-          const normX = Math.min(Math.max(base.x + jitterX, 0.12), 0.88);
-          const normY = Math.min(Math.max(base.y + jitterY, 0.12), 0.88);
-
-          const bLat = sLat + normY * latSpan;
-          const bLng = wLng + normX * lngSpan;
-
-          const prof = roofProfiles[i % roofProfiles.length];
-          const hw = (prof.w / 2.0) / mLng;
-          const hh = (prof.h / 2.0) / mLat;
-
-          const topLat = Math.min(nLat - 0.000005, bLat + hh);
-          const botLat = Math.max(sLat + 0.000005, bLat - hh);
-          const rightLng = Math.min(eLng - 0.000005, bLng + hw);
-          const leftLng = Math.max(wLng + 0.000005, bLng - hw);
-
-          const hNum = `H${String(houseInt).padStart(3, '0')}`;
-          const cCode = `${pin}-${vCode}-${hNum}`;
-
-          bldgs.push({
-            temp_id: `det_crop_${houseInt}`,
-            house_number: hNum,
-            cadastral_code: cCode,
-            pincode: pin,
+      try {
+        const res = await request('/properties/ai-detect-houses', {
+          method: 'POST',
+          body: JSON.stringify({
+            latitude: params.latitude || 25.4358,
+            longitude: params.longitude || 81.8463,
+            pincode: params.pincode || "212306",
             village: params.village || "Lakshmipur",
-            village_code: vCode,
-            latitude: Number(bLat.toFixed(7)),
-            longitude: Number(bLng.toFixed(7)),
-            area_sq_m: Number((prof.w * prof.h).toFixed(1)),
-            confidence_score: prof.conf,
-            roof_type: prof.roof,
-            floors: prof.floors,
-            build_material: prof.mat,
-            polygon: [
-              [Number(topLat.toFixed(7)), Number(leftLng.toFixed(7))],
-              [Number(topLat.toFixed(7)), Number(rightLng.toFixed(7))],
-              [Number(botLat.toFixed(7)), Number(rightLng.toFixed(7))],
-              [Number(botLat.toFixed(7)), Number(leftLng.toFixed(7))],
-            ],
-            verified: false,
-            estimated_accuracy: "1m Optical Resolution (Zoom 19 Calibrated)",
-          });
-        }
-      } else {
-        const offsets = [
-          { dx: 0, dy: 0, prof: 0 },
-          { dx: 26, dy: 14, prof: 1 },
-          { dx: -28, dy: 9, prof: 2 },
-          { dx: 16, dy: -28, prof: 3 },
-          { dx: -24, dy: -25, prof: 4 },
-          { dx: 44, dy: -10, prof: 5 },
-        ];
-
-        bldgs = offsets.map((item, idx) => {
-          while (assignedNums.has(nextSeq)) {
-            nextSeq++;
-          }
-          const houseInt = nextSeq;
-          assignedNums.add(houseInt);
-          nextSeq++;
-
-          const prof = roofProfiles[item.prof % roofProfiles.length];
-          const cLat = lat + item.dy / mLat;
-          const cLng = lng + item.dx / mLng;
-          const hw = (prof.w / 2.0) / mLng;
-          const hh = (prof.h / 2.0) / mLat;
-          const hNum = `H${String(houseInt).padStart(3, '0')}`;
-
-          return {
-            temp_id: `det_bldg_${houseInt}`,
-            house_number: hNum,
-            cadastral_code: `${pin}-${vCode}-${hNum}`,
-            pincode: pin,
-            village: params.village || "Lakshmipur",
-            village_code: vCode,
-            latitude: Number(cLat.toFixed(7)),
-            longitude: Number(cLng.toFixed(7)),
-            area_sq_m: Number((prof.w * prof.h).toFixed(1)),
-            confidence_score: prof.conf,
-            roof_type: prof.roof,
-            floors: prof.floors,
-            build_material: prof.mat,
-            polygon: [
-              [Number((cLat + hh).toFixed(7)), Number((cLng - hw).toFixed(7))],
-              [Number((cLat + hh).toFixed(7)), Number((cLng + hw).toFixed(7))],
-              [Number((cLat - hh).toFixed(7)), Number((cLng + hw).toFixed(7))],
-              [Number((cLat - hh).toFixed(7)), Number((cLng - hw).toFixed(7))],
-            ],
-            verified: false,
-            estimated_accuracy: "1m Optical Resolution (Zoom 19 Calibrated)",
-          };
+            village_code: params.village_code || "LAK042",
+            block: params.block || "Koraon",
+            district: params.district || "Prayagraj",
+            state: params.state || "Uttar Pradesh",
+            radius_meters: params.radius_meters || 80.0,
+            zoom_level: params.zoom_level || 18,
+            bounds: params.bounds || null,
+            layer_type: params.layer_type || "street",
+          })
         });
+        if (res && res.success && Array.isArray(res.buildings)) {
+          return res;
+        }
+      } catch (err) {
+        console.warn('[API] AI Detect Houses server notice:', err);
       }
 
+      // If server is unreachable or area is empty land, return clean zero-count response (never invent ghost boxes on plain land)
+      const vCode = (params.village_code || "LAK042").toUpperCase();
+      const pin = String(params.pincode || "212306").trim();
       return {
         success: true,
-        total_detected: bldgs.length,
-        target_resolution: "1-Meter Optical Satellite Precision (Zoom 19)",
-        center_coordinates: { latitude: Number(lat.toFixed(7)), longitude: Number(lng.toFixed(7)) },
+        total_detected: 0,
+        target_resolution: "1-Meter Optical & Cadastral Vector Precision",
+        center_coordinates: {
+          latitude: params.latitude || 25.4358,
+          longitude: params.longitude || 81.8463,
+        },
         pincode: pin,
         village: params.village || "Lakshmipur",
         village_code: vCode,
-        average_confidence: 96.2,
-        buildings: bldgs,
+        average_confidence: 98.5,
+        already_assigned_filtered: 0,
+        next_available_house_num: "H001",
+        buildings: [],
       };
     },
 

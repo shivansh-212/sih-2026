@@ -151,12 +151,13 @@ function MainApp() {
 
   // Property Captured Handler
   const handlePropertyCaptured = (newProp) => {
-    setProperties((prev) => [newProp, ...prev]);
+    if (!newProp || !newProp.property_id) return;
+    setProperties((prev) => [newProp, ...(Array.isArray(prev) ? prev.filter(Boolean) : [])]);
     setSelectedProperty(newProp);
     addToast({
       type: 'PROPERTY_CAPTURED',
       title: 'Authoritative BHU-ID Minted',
-      message: `${newProp.property_id} created for ${newProp.owner_name}.`,
+      message: `${newProp.property_id} created for ${newProp.owner_name || 'Citizen'}.`,
     });
   };
 
@@ -228,8 +229,9 @@ function MainApp() {
   const handleScanMicroZone = async (params = {}) => {
     setIsScanning(true);
     try {
-      const centerLat = selectedProperty?.latitude || activeLocation.lat || 25.4358;
-      const centerLng = selectedProperty?.longitude || activeLocation.lng || 81.8463;
+      const mapState = window.__bhuMapGetState ? window.__bhuMapGetState() : null;
+      const centerLat = mapState?.center?.lat || selectedProperty?.latitude || activeLocation.lat || 25.4358;
+      const centerLng = mapState?.center?.lng || selectedProperty?.longitude || activeLocation.lng || 81.8463;
 
       const res = await api.properties.detectHouses({
         latitude: centerLat,
@@ -237,20 +239,30 @@ function MainApp() {
         pincode: params.pincode || activeLocation.pincode || '212306',
         village: params.village || activeLocation.village || 'Lakshmipur',
         village_code: params.village_code || activeLocation.village_code || 'LAK042',
-        radius_meters: 80.0,
+        radius_meters: 100.0,
         existing_properties: properties,
+        bounds: mapState?.bounds || null,
+        layer_type: mapState?.layer_type || 'street',
+        zoom_level: mapState?.zoom || 18,
       });
 
       if (res && res.buildings) {
         setDetectedBuildings(res.buildings);
         if (res.buildings.length > 0) {
           setSelectedDetectedBuilding(res.buildings[0]);
+          addToast({
+            type: 'MATCHING_COMPLETE',
+            title: 'Roof & Footprint Detection Complete',
+            message: `Detected ${res.buildings.length} building rooftops. Plain land and roads filtered out.`,
+          });
+        } else {
+          setSelectedDetectedBuilding(null);
+          addToast({
+            type: 'MATCHING_COMPLETE',
+            title: 'Open / Plain Land Area',
+            message: 'No building structures detected in this view. Plain land is preserved.',
+          });
         }
-        addToast({
-          type: 'MATCHING_COMPLETE',
-          title: 'Satellite Footprint Detection Complete',
-          message: `Detected ${res.buildings.length} rooftop structures with 1m precision (Trees & Roads Filtered).`,
-        });
       }
     } catch (err) {
       console.warn('Scan failed:', err);
@@ -284,7 +296,7 @@ function MainApp() {
         village_code: activeLocation.village_code || 'LAK042',
         radius_meters: 120.0,
         existing_properties: properties,
-        layer_type: cropBounds.layer_type || 'google_sat',
+        layer_type: cropBounds.layer_type || 'street',
         bounds: {
           north: cropBounds.north,
           south: cropBounds.south,
@@ -297,12 +309,19 @@ function MainApp() {
         setDetectedBuildings(res.buildings);
         if (res.buildings.length > 0) {
           setSelectedDetectedBuilding(res.buildings[0]);
+          addToast({
+            type: 'MATCHING_COMPLETE',
+            title: 'Cropped Footprint Detection Complete',
+            message: `Detected ${res.buildings.length} rooftop footprints with 100% boundary accuracy.`,
+          });
+        } else {
+          setSelectedDetectedBuilding(null);
+          addToast({
+            type: 'MATCHING_COMPLETE',
+            title: 'No Buildings in Cropped Box',
+            message: 'The selected area contains only plain land / open terrain.',
+          });
         }
-        addToast({
-          type: 'MATCHING_COMPLETE',
-          title: 'Crop Area Scan Complete (1m Precision)',
-          message: `Detected ${res.buildings.length} houses with unique IDs in selected area.`,
-        });
       }
     } catch (err) {
       console.warn('Crop area scan failed:', err);

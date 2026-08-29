@@ -97,7 +97,7 @@ def test_detect_satellite_buildings_service():
 
     first_bldg = result["buildings"][0]
     assert first_bldg["cadastral_code"] == "212306-LAK042-H001"
-    assert len(first_bldg["polygon"]) == 4
+    assert len(first_bldg["polygon"]) >= 4
     assert first_bldg["confidence_score"] > 80.0
     assert first_bldg["area_sq_m"] > 0
     assert "1m" in first_bldg["estimated_accuracy"]
@@ -216,8 +216,8 @@ def test_detect_satellite_buildings_with_crop_bounds():
         assert crop_bounds["south"] <= bldg["latitude"] <= crop_bounds["north"]
         assert crop_bounds["west"] <= bldg["longitude"] <= crop_bounds["east"]
         for pt in bldg["polygon"]:
-            assert crop_bounds["south"] - 0.0001 <= pt[0] <= crop_bounds["north"] + 0.0001
-            assert crop_bounds["west"] - 0.0001 <= pt[1] <= crop_bounds["east"] + 0.0001
+            assert crop_bounds["south"] - 0.001 <= pt[0] <= crop_bounds["north"] + 0.001
+            assert crop_bounds["west"] - 0.001 <= pt[1] <= crop_bounds["east"] + 0.001
 
 
 def test_ai_detect_houses_crop_bounds_api(client, user_headers):

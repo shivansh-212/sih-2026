@@ -173,9 +173,18 @@ export function TopNav({
           <input
             type="text"
             className="search-input"
-            placeholder="Search worldwide city, village, pincode (Noida, Tokyo, 201309, 10001, lat,lng)..."
+            placeholder="Search Google Maps coords, Plus Code, URL, village, address (25.4358, 81.8463 / 7JVW52GR+PQ / Koraon / Tokyo)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                if (locationSuggestions.length > 0) {
+                  handleSelectLocation(locationSuggestions[0]);
+                } else if (suggestions.length > 0) {
+                  handleSelectProperty(suggestions[0]);
+                }
+              }
+            }}
             onFocus={() => {
               setIsDropdownOpen(true);
             }}
