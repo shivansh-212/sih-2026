@@ -13,6 +13,7 @@ import {
   AdminModal,
   LiveToastFeed,
   AIHouseCountDrawer,
+  LoadingScreen,
 } from './components';
 
 function MainApp() {
@@ -60,6 +61,9 @@ function MainApp() {
   const [isScanning, setIsScanning] = useState(false);
   const [isRegistering, setIsRegistering] = useState(false);
 
+  // App Startup Loading Screen State
+  const [isAppLoading, setIsAppLoading] = useState(true);
+
   // Helper to add toast
   const addToast = useCallback((toast) => {
     const id = Date.now() + Math.random();
@@ -82,6 +86,10 @@ function MainApp() {
       }
     } catch (err) {
       console.warn('Failed to fetch initial data:', err);
+    } finally {
+      setTimeout(() => {
+        setIsAppLoading(false);
+      }, 1600);
     }
   }, []);
 
@@ -359,6 +367,9 @@ function MainApp() {
 
   return (
     <div className="bhu-app">
+      {/* SIH-2026 Rough Terrain Field Surveyor Loading Screen */}
+      <LoadingScreen isLoading={isAppLoading} onFinish={() => setIsAppLoading(false)} />
+
       {/* Floating Top Navigation */}
       <TopNav
         properties={properties}

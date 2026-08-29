@@ -1,0 +1,581 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   BHU-ID SIH-2026 // CHROME OFFLINE DINO THEME & COMPACT LOADING SCREEN
+   Exact Retro Monochrome Pixel Palette, Hard Offset Shadows & Scaled Footprint
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sih-loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #f7f7f7; /* Iconic Chrome Offline Dino canvas grey */
+  padding: 16px;
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.35s cubic-bezier(0.4, 0, 0.2, 1),
+              visibility 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  user-select: none;
+}
+
+.sih-loading-overlay.fade-out {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AMBIENT FULLSCREEN CLOUDS (OUTSIDE OF THE MODAL BOX)
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sih-ambient-clouds-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 0;
+}
+
+.sih-ambient-cloud {
+  position: absolute;
+  color: #dcdfe4;
+  opacity: 0.75;
+  will-change: transform;
+}
+
+[data-theme='dark'] .sih-ambient-cloud {
+  color: #2f3238;
+  opacity: 0.6;
+}
+
+.cloud-pos-1 {
+  top: 10%;
+  width: 140px;
+  animation: ambient-drift 34s linear infinite;
+  animation-delay: -5s;
+}
+
+.cloud-pos-2 {
+  top: 24%;
+  width: 190px;
+  animation: ambient-drift 44s linear infinite;
+  animation-delay: -20s;
+}
+
+.cloud-pos-3 {
+  top: 68%;
+  width: 160px;
+  animation: ambient-drift 38s linear infinite;
+  animation-delay: -12s;
+}
+
+.cloud-pos-4 {
+  top: 84%;
+  width: 130px;
+  animation: ambient-drift 30s linear infinite;
+  animation-delay: -24s;
+}
+
+.cloud-pos-5 {
+  top: 46%;
+  width: 170px;
+  animation: ambient-drift 40s linear infinite;
+  animation-delay: -32s;
+}
+
+@keyframes ambient-drift {
+  from {
+    transform: translateX(105vw);
+  }
+  to {
+    transform: translateX(-220px);
+  }
+}
+
+/* 1. Top Monospace Retro Pill Badge */
+.sih-top-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #ffffff;
+  border: 1.5px solid #535353;
+  border-radius: 5px;
+  padding: 4px 12px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #535353;
+  /* Retro Pixel Hard Offset Shadow */
+  box-shadow: 2px 2.5px 0px #535353;
+  margin-bottom: 14px;
+}
+
+.sih-badge-sq {
+  color: #757575;
+  font-size: 8px;
+}
+
+/* 2. Main Card Modal - Compact Scaled Dimensions */
+.sih-loading-card {
+  width: 100%;
+  max-width: 420px;
+  background: #ffffff;
+  border: 1.5px solid #535353;
+  border-radius: 20px;
+  /* 3D Offset Charcoal Shadow */
+  box-shadow: 4.5px 5.5px 0px #535353, 0 16px 32px rgba(0, 0, 0, 0.06);
+  padding: 20px 20px 14px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 3. Emblem / Brand Header */
+.sih-app-emblem {
+  width: 46px;
+  height: 46px;
+  background: #1a73e8;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 6px 18px rgba(26, 115, 232, 0.38);
+  margin-bottom: 8px;
+}
+
+.sih-emblem-char {
+  color: #ffffff;
+  font-size: 25px;
+  font-weight: 800;
+  font-family: 'Noto Sans Devanagari', 'Poppins', sans-serif;
+  line-height: 1;
+}
+
+.sih-app-title {
+  font-family: 'Noto Sans Devanagari', 'Poppins', sans-serif;
+  font-size: 21px;
+  font-weight: 800;
+  color: #1a73e8;
+  margin: 0;
+  letter-spacing: 0.5px;
+}
+
+.sih-app-sub {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  color: #757575;
+  margin: 2px 0 8px 0;
+}
+
+/* 4. Reconnaissance Pill */
+.sih-recon-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #f7f7f7;
+  border: 1px solid #d4d4d4;
+  border-radius: 5px;
+  padding: 3px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.8px;
+  color: #535353;
+  box-shadow: 1px 1px 0px #d4d4d4;
+  margin-bottom: 12px;
+}
+
+/* 5. Inset Illustration Canvas Box */
+.sih-illustration-box {
+  width: 100%;
+  background: #f7f7f7;
+  border: 1.5px solid #d4d4d4;
+  border-radius: 12px;
+  padding: 8px 10px 10px;
+  margin-bottom: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.sih-svg-canvas {
+  width: 100%;
+  height: 125px;
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PARALLAX SCROLLING BACKGROUND & MOVING CLOUDS
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* 1. Moving Clouds Layer */
+.sih-clouds-layer {
+  animation: sih-clouds-drift 24s linear infinite;
+  will-change: transform;
+}
+
+@keyframes sih-clouds-drift {
+  from {
+    transform: translateX(0px);
+  }
+  to {
+    transform: translateX(-600px);
+  }
+}
+
+/* 2. Distant Mountains Parallax */
+.sih-mountains-far {
+  animation: sih-mountains-far-scroll 18s linear infinite;
+  will-change: transform;
+}
+
+@keyframes sih-mountains-far-scroll {
+  from {
+    transform: translateX(0px);
+  }
+  to {
+    transform: translateX(-600px);
+  }
+}
+
+/* 3. Mid-Distance Hills Parallax */
+.sih-mountains-near {
+  animation: sih-mountains-near-scroll 10s linear infinite;
+  will-change: transform;
+}
+
+@keyframes sih-mountains-near-scroll {
+  from {
+    transform: translateX(0px);
+  }
+  to {
+    transform: translateX(-600px);
+  }
+}
+
+/* 4. Terrain Rocks & Ground Surface */
+.sih-ground-rocks {
+  animation: sih-ground-scroll 3.2s linear infinite;
+  will-change: transform;
+}
+
+@keyframes sih-ground-scroll {
+  from {
+    transform: translateX(0px);
+  }
+  to {
+    transform: translateX(-600px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   4X4 RECONNAISSANCE VEHICLE ROLLING TYRES & SUSPENSION MOTION
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Continuous Tyre Rotation */
+.rolling-wheel-rear,
+.rolling-wheel-front {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: sih-wheel-spin 0.45s linear infinite;
+  will-change: transform;
+}
+
+@keyframes sih-wheel-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Vehicle Suspension Dynamics */
+.sih-vehicle-group {
+  animation: sih-vehicle-roll 2.4s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes sih-vehicle-roll {
+  0% {
+    transform: translate(85px, 96px) rotate(0deg);
+  }
+  16% {
+    transform: translate(87px, 94.8px) rotate(-0.9deg);
+  }
+  35% {
+    transform: translate(90px, 97.2px) rotate(1.1deg);
+  }
+  52% {
+    transform: translate(92px, 95.3px) rotate(-0.6deg);
+  }
+  70% {
+    transform: translate(88px, 97.0px) rotate(0.8deg);
+  }
+  88% {
+    transform: translate(86px, 95.1px) rotate(-0.4deg);
+  }
+  100% {
+    transform: translate(85px, 96px) rotate(0deg);
+  }
+}
+
+/* Signal Waves & Transmission Arcs */
+.signal-wave {
+  transform-origin: center;
+  animation: wave-expand 2s ease-out infinite;
+}
+
+.signal-wave-2 {
+  transform-origin: center;
+  animation: wave-expand 2s ease-out 0.6s infinite;
+}
+
+.signal-arc {
+  stroke-dasharray: 6, 6;
+  animation: dash-flow 1.5s linear infinite;
+}
+
+@keyframes wave-expand {
+  0% {
+    r: 3;
+    opacity: 0.9;
+  }
+  70% {
+    r: 14;
+    opacity: 0.2;
+  }
+  100% {
+    r: 18;
+    opacity: 0;
+  }
+}
+
+@keyframes dash-flow {
+  to {
+    stroke-dashoffset: -24;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PROGRESS STATUS LINE & PROGRESS BAR
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sih-progress-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  margin-bottom: 5px;
+}
+
+.sih-status-text {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 8.5px;
+  font-weight: 700;
+  letter-spacing: 0.6px;
+  color: #535353;
+}
+
+.sih-bolt-icon {
+  color: #757575;
+}
+
+.sih-percent-text {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #535353;
+}
+
+.sih-progress-track {
+  width: 100%;
+  height: 5px;
+  background: #e6e6e6;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.sih-progress-fill {
+  height: 100%;
+  background: #535353;
+  border-radius: 999px;
+  transition: width 0.3s ease-out;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BOTTOM 4 DIAGNOSTIC TILES
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.sih-diag-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  padding-top: 6px;
+  border-top: 1px solid #e6e6e6;
+}
+
+.sih-diag-tile {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 1px 3px;
+  position: relative;
+}
+
+.sih-diag-tile:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  right: -2px;
+  top: 15%;
+  bottom: 15%;
+  width: 1px;
+  background: #e6e6e6;
+}
+
+.sih-diag-icon-box {
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sih-diag-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.sih-diag-label {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 7px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  color: #757575;
+  text-transform: uppercase;
+}
+
+.sih-diag-status {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
+
+.sih-diag-status.active {
+  color: #535353;
+}
+
+.sih-diag-status.success {
+  color: #535353;
+}
+
+.sih-diag-status.pending {
+  color: #999999;
+}
+
+/* Dark Mode Integration */
+[data-theme='dark'] .sih-loading-overlay {
+  background: #202124; /* Chrome Dark Mode Canvas */
+}
+
+[data-theme='dark'] .sih-top-badge {
+  background: #303134;
+  border-color: #5f6368;
+  color: #e8eaed;
+  box-shadow: 2px 2.5px 0px #5f6368;
+}
+
+[data-theme='dark'] .sih-loading-card {
+  background: #303134;
+  border-color: #5f6368;
+  box-shadow: 4.5px 5.5px 0px #5f6368, 0 16px 32px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark'] .sih-app-emblem {
+  background: #1a73e8;
+  box-shadow: 0 6px 18px rgba(26, 115, 232, 0.45);
+}
+
+[data-theme='dark'] .sih-emblem-char {
+  color: #ffffff;
+}
+
+[data-theme='dark'] .sih-app-title {
+  color: #38bdf8;
+}
+
+[data-theme='dark'] .sih-app-sub {
+  color: #9aa0a6;
+}
+
+[data-theme='dark'] .sih-illustration-box {
+  background: #202124;
+  border-color: #5f6368;
+}
+
+[data-theme='dark'] .sih-status-text {
+  color: #e8eaed;
+}
+
+[data-theme='dark'] .sih-percent-text {
+  color: #e8eaed;
+}
+
+[data-theme='dark'] .sih-progress-track {
+  background: #5f6368;
+}
+
+[data-theme='dark'] .sih-progress-fill {
+  background: #e8eaed;
+}
+
+[data-theme='dark'] .sih-recon-pill {
+  background: #202124;
+  border-color: #5f6368;
+  color: #9aa0a6;
+  box-shadow: 1px 1px 0px #5f6368;
+}
+
+[data-theme='dark'] .sih-diag-grid {
+  border-top-color: #5f6368;
+}
+
+[data-theme='dark'] .sih-diag-tile:not(:last-child)::after {
+  background: #5f6368;
+}
+
+[data-theme='dark'] .sih-diag-label {
+  color: #9aa0a6;
+}
+
+[data-theme='dark'] .sih-diag-status.active,
+[data-theme='dark'] .sih-diag-status.success {
+  color: #e8eaed;
+}
+
+@media (max-width: 480px) {
+  .sih-loading-card {
+    padding: 16px 14px 12px;
+    border-radius: 16px;
+  }
+  .sih-diag-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  .sih-diag-tile:not(:last-child)::after {
+    display: none;
+  }
+}

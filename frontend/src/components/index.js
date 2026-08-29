@@ -24,3 +24,7 @@ export { AdminModal } from './modals/AdminModal';
 export { ConflictAuditModal } from './modals/ConflictAuditModal';
 export { FieldCaptureModal } from './modals/FieldCaptureModal';
 export { IdentityResolutionModal } from './modals/IdentityResolutionModal';
+
+// 5. System Loading & Splash
+export { LoadingScreen } from './loading/LoadingScreen';
+

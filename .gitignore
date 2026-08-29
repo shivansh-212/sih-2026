@@ -1,4 +1,4 @@
-﻿# Python
+# Python
 __pycache__/
 *.py[cod]
 *$py.class
@@ -32,6 +32,8 @@ pyvenv.cfg
 
 # SQLite / Local DB
 *.db
+*.db-shm
+*.db-wal
 *.sqlite
 *.sqlite3
 bhu_id.db

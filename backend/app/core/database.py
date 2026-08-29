@@ -49,10 +49,20 @@ def _create_engine():
     if url.startswith("sqlite"):
         eng = create_engine(
             url,
-            connect_args={"check_same_thread": False},
+            connect_args={"check_same_thread": False, "timeout": 45.0},
         )
         @event.listens_for(eng, "connect")
         def connect_sqlite(dbapi_con, con_record):
+            # High-concurrency Write-Ahead-Logging mode & busy timeout
+            cursor = dbapi_con.cursor()
+            try:
+                cursor.execute("PRAGMA journal_mode=WAL;")
+                cursor.execute("PRAGMA synchronous=NORMAL;")
+                cursor.execute("PRAGMA busy_timeout=45000;")
+            except Exception:
+                pass
+            finally:
+                cursor.close()
             dbapi_con.create_function("AsEWKB", 1, lambda x: x)
             dbapi_con.create_function("AsBinary", 1, lambda x: x)
             dbapi_con.create_function("GeomFromEWKT", 1, lambda x: x)
