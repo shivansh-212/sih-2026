@@ -14,6 +14,7 @@ import {
   LiveToastFeed,
   AIHouseCountDrawer,
   LoadingScreen,
+  TutorialOverlay,
 } from './components';
 
 function MainApp() {
@@ -64,6 +65,9 @@ function MainApp() {
   // App Startup Loading Screen State
   const [isAppLoading, setIsAppLoading] = useState(true);
 
+  // Interactive Tutorial State (shows on first visit)
+  const [showTutorial, setShowTutorial] = useState(false);
+
   // Helper to add toast
   const addToast = useCallback((toast) => {
     const id = Date.now() + Math.random();
@@ -89,6 +93,10 @@ function MainApp() {
     } finally {
       setTimeout(() => {
         setIsAppLoading(false);
+        // Show tutorial on first visit (after loading completes)
+        if (!localStorage.getItem('bhu_tutorial_done')) {
+          setTimeout(() => setShowTutorial(true), 600);
+        }
       }, 1600);
     }
   }, []);
@@ -388,6 +396,11 @@ function MainApp() {
     <div className="bhu-app">
       {/* SIH-2026 Rough Terrain Field Surveyor Loading Screen */}
       <LoadingScreen isLoading={isAppLoading} onFinish={() => setIsAppLoading(false)} />
+
+      {/* Interactive Step-by-Step Tutorial Overlay (first visit) */}
+      {showTutorial && (
+        <TutorialOverlay onClose={() => setShowTutorial(false)} />
+      )}
 
       {/* Floating Top Navigation */}
       <TopNav

@@ -28,3 +28,6 @@ export { IdentityResolutionModal } from './modals/IdentityResolutionModal';
 // 5. System Loading & Splash
 export { LoadingScreen } from './loading/LoadingScreen';
 
+// 6. Interactive Tutorial & Onboarding
+export { TutorialOverlay } from './tutorial/TutorialOverlay';
+
