@@ -17,7 +17,8 @@ import {
   Globe,
   Loader2,
   Compass,
-  Hash
+  Hash,
+  HelpCircle,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { 
@@ -34,6 +35,7 @@ export function TopNav({
   onOpenAIReconcile,
   onOpenAudit,
   onOpenHouseCount,
+  onOpenTutorial,
   onNavigateToLocation,
   selectedVillage,
   onSelectVillage,
@@ -365,6 +367,17 @@ export function TopNav({
             <span>Data Ingestion</span>
           </button>
         )}
+
+        {/* Interactive Tutorial Button */}
+        <button 
+          className="action-btn" 
+          onClick={onOpenTutorial} 
+          title="How to Map Unnamed Houses & Run AI Scan (Interactive Tutorial)"
+          style={{ background: 'rgba(26, 115, 232, 0.08)', color: '#1a73e8', borderColor: 'rgba(26, 115, 232, 0.25)', fontWeight: 600 }}
+        >
+          <HelpCircle size={16} color="#1a73e8" />
+          <span>Tutorial</span>
+        </button>
 
         {/* Theme Toggle */}
         <button

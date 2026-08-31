@@ -93,9 +93,16 @@ function MainApp() {
     } finally {
       setTimeout(() => {
         setIsAppLoading(false);
-        // Show tutorial on first visit (after loading completes)
-        if (!localStorage.getItem('bhu_tutorial_done')) {
-          setTimeout(() => setShowTutorial(true), 600);
+        // Show tutorial on first visit (after loading completes) OR if URL query ?tutorial=true
+        try {
+          const urlParams = new URLSearchParams(window.location.search);
+          if (urlParams.get('tutorial') === 'true' || !localStorage.getItem('bhu_tutorial_done')) {
+            setTimeout(() => setShowTutorial(true), 600);
+          }
+        } catch (_) {
+          if (!localStorage.getItem('bhu_tutorial_done')) {
+            setTimeout(() => setShowTutorial(true), 600);
+          }
         }
       }, 1600);
     }
@@ -409,6 +416,7 @@ function MainApp() {
         onOpenCapture={() => setIsCaptureOpen(true)}
         onOpenAdmin={() => setIsAdminOpen(true)}
         onOpenHouseCount={handleOpenHouseCount}
+        onOpenTutorial={() => setShowTutorial(true)}
         onNavigateToLocation={handleNavigateToLocation}
         onOpenAIReconcile={() => {
           if (!selectedProperty && properties.length > 0) {
